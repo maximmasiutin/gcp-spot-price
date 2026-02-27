@@ -259,6 +259,21 @@ def _diagnose_compute_error(exc: Exception, project: str) -> str:
             "Authentication failed for the Compute Engine API.\n"
             "Fix: run 'gcloud auth application-default login' and retry."
         )
+    if isinstance(exc, gapi_exceptions.FailedPrecondition):
+        if "billing" in msg.lower() or "BILLING" in msg:
+            return (
+                f"Billing is not enabled for project '{project}'.\n"
+                "The Compute Engine API requires a billing account.\n"
+                "Fix option 1: link a billing account to this project:\n"
+                "     gcloud billing accounts list\n"
+                "     gcloud billing projects link"
+                f" {project} --billing-account=ACCOUNT_ID\n"
+                "     gcloud services enable compute.googleapis.com"
+                f" --project={project}\n"
+                "Fix option 2: use a different project that already has billing\n"
+                "     and the Compute Engine API enabled:\n"
+                "     python gcp-spot-price.py --project=OTHER_PROJECT ..."
+            )
     if isinstance(exc, gapi_exceptions.Forbidden):
         if "has not been used" in msg or "it is disabled" in msg:
             return (
